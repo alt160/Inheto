@@ -11,6 +11,8 @@
 
 ## Local validation (PowerShell 7)
 
+Production source lives under `src/`; the project stays at the repository root so existing solution references and build commands remain unchanged. The root README remains the GitHub landing-page and NuGet README. Repository-layout-only changes do not require replacing an existing package or moving a release tag.
+
 Run from the repository root, with Git and the .NET 10 SDK used by CI (the resulting library still targets .NET 8). These commands build and inspect local artifacts only; they do not push or publish:
 
 ```powershell
@@ -24,7 +26,7 @@ dotnet pack InhetoSerializer.csproj -c Release --no-build --no-restore -o artifa
 ./scripts/Test-PackageConsumers.ps1 -Framework net10.0
 ```
 
-The consumer script snapshots changed sources immediately before each compile, uses isolated intermediate/output/package-cache directories, and checks that every consumer loads the exact packaged DLL. Collection scenarios execute in separate processes and take several minutes. Runtime suites cover the README and guides, activation, literal/shared/circular paths, collection conversions, public diagnostics, varints, and caller-owned transformations.
+The consumer script snapshots changed sources immediately before each compile, uses isolated intermediate/output/package-cache directories, and checks that every consumer loads the exact packaged DLL. Its generated NuGet configuration maps `Inheto` exclusively to the candidate feed and dependencies to NuGet.org; package-origin metadata is checked too. This also makes same-version, unpublished layout candidates safe to test without accidentally restoring the published package. Collection scenarios execute in separate processes and take several minutes. Runtime suites cover the README and guides, activation, literal/shared/circular paths, collection conversions, public diagnostics, varints, and caller-owned transformations.
 
 For this Windows development workspace, pass the configured Visual Studio MSBuild path through `-MSBuildPath` and place `-WorkDirectory` on the dedicated test volume. Build is incremental; Rebuild requires a preceding targeted cleanup of only the selected projects' `bin`/`obj` directories after snapshots. Do not erase unrelated work. `New-ReleaseAssets.ps1` refuses to overwrite a ZIP; use a fresh candidate directory when revising local release files.
 
