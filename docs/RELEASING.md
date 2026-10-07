@@ -15,8 +15,8 @@ Run from the repository root, with Git and the .NET 10 SDK used by CI (the resul
 
 ```powershell
 ./scripts/Backup-ChangedSources.ps1
-dotnet build InhetoSerializer.csproj -c Release /p:TreatWarningsAsErrors=true
-dotnet pack InhetoSerializer.csproj -c Release --no-build --no-restore -o artifacts/packages
+dotnet build InhetoSerializer.csproj -c Release /p:ContinuousIntegrationBuild=true /p:TreatWarningsAsErrors=true
+dotnet pack InhetoSerializer.csproj -c Release --no-build --no-restore -o artifacts/packages /p:ContinuousIntegrationBuild=true
 ./scripts/New-ReleaseAssets.ps1
 ./scripts/Test-ReleaseAssets.ps1
 ./scripts/Test-PackageConsumers.ps1 -Framework net8.0
