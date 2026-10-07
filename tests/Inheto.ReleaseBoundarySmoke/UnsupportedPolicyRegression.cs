@@ -157,7 +157,12 @@ public static class UnsupportedPolicyRegression
         throw new InvalidOperationException("custom hook exception changed");
     }
 
-    /// <summary>Compares warmed managed allocation counts with strict mode off/on for identical repeated graphs; excludes setup and assertions from measurement.<br/></summary>
+    /// <summary>
+    /// Compares warmed steady-state managed allocation counts with strict mode off/on for identical repeated graphs.<br/>
+    /// Alternates measurement order across eight paired batches and requires exactly equal minimum counts, not a byte tolerance.<br/>
+    /// Runtime/pool bookkeeping can add a small transient allocation to an individual batch; recurring per-write allocations remain in every batch and fail the exact comparison.<br/>
+    /// Setup, warmup, sample storage, logging and assertions remain outside each measured interval.<br/>
+    /// </summary>
     private static void VerifyAllocations()
     {
         var value = new VisibleState { Value = 7 };
@@ -172,9 +177,23 @@ public static class UnsupportedPolicyRegression
             return GC.GetAllocatedBytesForCurrentThread() - before;
         }
         _ = Measure(false); _ = Measure(true);
-        long off = Measure(false), on = Measure(true);
+        long off = long.MaxValue, on = long.MaxValue;
+        for (int batch = 0; batch < 8; batch++)
+        {
+            long offSample, onSample;
+            if ((batch & 1) == 0)
+            {
+                offSample = Measure(false); onSample = Measure(true);
+            }
+            else
+            {
+                onSample = Measure(true); offSample = Measure(false);
+            }
+            off = Math.Min(off, offSample); on = Math.Min(on, onSample);
+            Console.WriteLine($"Allocation sample {batch + 1}: off={offSample}, on={onSample} managed bytes.");
+        }
         Require(on == off, $"strict success added managed allocations: off={off}; on={on}");
-        Console.WriteLine($"PASS strict allocation delta: 10,000 warmed writes off={off}, on={on}, delta={on - off} managed bytes.");
+        Console.WriteLine($"PASS strict allocation delta: minimum of eight 10,000-write warmed batches off={off}, on={on}, delta={on - off} managed bytes.");
     }
 
     /// <summary>Creates a policy with one repeated member token for the operation-lifetime regression.<br/></summary>
