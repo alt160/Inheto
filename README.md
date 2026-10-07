@@ -1,6 +1,6 @@
 # Inheto
 
-Inheto is a .NET-native binary serializer for the objects your application already uses. The intent is simple: persist your data without first redesigning your objects around a serializer. No serialization attributes, declared contracts, generated models, or application-assigned object identities are needed for supported shapes.
+Inheto (**IN**dexed **HE**ader **T**o **O**ffsets) is a .NET-native binary serializer for the objects your application already uses. The intent is simple: persist your data without first redesigning your objects around a serializer. No serialization attributes, declared contracts, generated models, or application-assigned object identities are needed for supported shapes.
 
 It handles both classes and structs, including sealed classes, nested collections, supported collection subclasses, and shared or circular references. The normal starting point is your existing objects—not a second set of serialization-only types. More than 50 built-in .NET types combine with supported arrays and collections into more than 25,000 tested shapes without custom handlers.
 

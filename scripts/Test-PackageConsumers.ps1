@@ -1,6 +1,6 @@
 param(
     [ValidateSet('net8.0', 'net9.0', 'net10.0')] [string] $Framework = 'net8.0',
-    [string] $Version = '1.0.0',
+    [string] $Version = '1.0.1',
     [string] $PackageDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts/packages'),
     [string] $WorkDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts/consumer-validation'),
     [string] $MSBuildPath = '',

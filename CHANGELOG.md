@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Explain the name Inheto: **IN**dexed **HE**ader **T**o **O**ffsets.
+- Documentation-only release; no serializer implementation or public API changes.
+
 ## 1.0.0
 
 First public release of Inheto.

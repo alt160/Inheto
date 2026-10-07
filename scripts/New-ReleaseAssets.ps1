@@ -1,5 +1,5 @@
 param(
-    [string] $Version = '1.0.0',
+    [string] $Version = '1.0.1',
     [string] $PackageDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts/packages'),
     [string] $LibraryDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) 'bin/Release/net8.0'))
 

@@ -8,7 +8,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>Inheto</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>alt160</Authors>
     <Copyright>Copyright (c) 2026 alt160</Copyright>
     <Description>A .NET-native, low-allocation binary serializer with shared and circular reference preservation, broad built-in type coverage, selective property-path reads, and compatible-type hydration.</Description>
