@@ -2,6 +2,8 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Text.Json;
+using System.Buffers.Binary;
+using System.Security.Cryptography;
 
 /// <summary>
 /// Validates release debug symbols through the independent package consumer, never through a production API.<br/>
@@ -33,11 +35,17 @@ public static class PackageMetadataRegression
         using var provider = MetadataReaderProvider.FromPortablePdbStream(bytes);
         MetadataReader metadata = provider.GetMetadataReader();
         int documents = 0;
+        int generated = 0;
         foreach (DocumentHandle handle in metadata.Documents)
         {
             string path = metadata.GetString(metadata.GetDocument(handle).Name);
             if (!path.StartsWith("/_/", StringComparison.Ordinal) || path.Contains('\\'))
                 throw new InvalidOperationException("Debug symbols expose a non-normalized/local source path: " + path);
+            if (path.StartsWith("/_/obj/", StringComparison.Ordinal))
+            {
+                VerifyEmbeddedGeneratedDocument(metadata, handle);
+                generated++;
+            }
             documents++;
         }
         Guid sourceLinkKind = new("CC110556-A091-4D38-9FEC-25AB9A351A6A");
@@ -55,7 +63,41 @@ public static class PackageMetadataRegression
                 mappings++;
             }
         }
-        if (documents == 0 || mappings != 1) throw new InvalidOperationException("Missing or ambiguous SourceLink/debug source inventory.");
-        Console.WriteLine($"PASS portable symbols: {documents} normalized source documents; SourceLink revision {commit}; no host-specific source paths.");
+        if (documents == 0 || generated == 0 || mappings != 1) throw new InvalidOperationException("Missing or ambiguous SourceLink/debug source inventory.");
+        Console.WriteLine($"PASS portable symbols: {documents} normalized source documents; {generated} checksum-verified embedded generated sources; SourceLink revision {commit}; no host-specific source paths.");
+    }
+
+    /// <summary>Verifies that a generated source document is embedded with the exact compiler-recorded checksum rather than mapped to an unavailable repository file.<br/></summary>
+    /// <param name="metadata">Portable-PDB metadata from the actual candidate symbols package.<br/></param>
+    /// <param name="documentHandle">A normalized generated document under the build-only obj path.<br/></param>
+    private static void VerifyEmbeddedGeneratedDocument(MetadataReader metadata, DocumentHandle documentHandle)
+    {
+        Guid embeddedKind = new("0E8A571B-6926-466E-B4AD-8AB04611F5FE");
+        Guid sha256Kind = new("8829D00F-11B8-4213-878B-770E8597AC16");
+        Document document = metadata.GetDocument(documentHandle);
+        byte[]? source = null;
+        foreach (CustomDebugInformationHandle handle in metadata.GetCustomDebugInformation(documentHandle))
+        {
+            CustomDebugInformation information = metadata.GetCustomDebugInformation(handle);
+            if (metadata.GetGuid(information.Kind) != embeddedKind) continue;
+            if (source is not null) throw new InvalidOperationException("Duplicated embedded generated source.");
+            byte[] blob = metadata.GetBlobBytes(information.Value);
+            if (blob.Length < sizeof(int)) throw new InvalidOperationException("Truncated embedded generated source.");
+            int size = BinaryPrimitives.ReadInt32LittleEndian(blob);
+            if (size < 0 || size > 2 * 1024 * 1024) throw new InvalidOperationException("Unexpected embedded generated-source size.");
+            if (size == 0) source = blob[sizeof(int)..];
+            else
+            {
+                using var input = new MemoryStream(blob, sizeof(int), blob.Length - sizeof(int), false);
+                using var inflater = new DeflateStream(input, CompressionMode.Decompress);
+                using var output = new MemoryStream();
+                inflater.CopyTo(output);
+                if (output.Length != size) throw new InvalidOperationException("Embedded generated-source size mismatch.");
+                source = output.ToArray();
+            }
+        }
+        if (source is null || metadata.GetGuid(document.HashAlgorithm) != sha256Kind ||
+            !SHA256.HashData(source).AsSpan().SequenceEqual(metadata.GetBlobBytes(document.Hash)))
+            throw new InvalidOperationException("Generated source is missing or differs from its portable-PDB checksum.");
     }
 }
