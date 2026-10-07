@@ -1,0 +1,26 @@
+# Build, IDE, review, and private local history
+**/bin/
+**/obj/
+.vs/
+.vshistory/
+.code-history/
+artifacts/
+*.user
+*.suo
+*.log
+*.nupkg
+*.snupkg
+
+# Retained local transformation code and superseded drafting notes
+/AESEncryptionHelper.cs
+/BrotliExtensions.cs
+/docs/README_WORKING_NOTES.md
+
+# Older host-specific probes remain local; maintained package-consumer suites ship as source only
+/tests/Inheto.DependencySmoke/
+/tests/Inheto.ExistingRegression/
+/tests/Inheto.PerformanceReview/
+/tests/Inheto.PathProbe/
+/tests/Invoke-ReviewBuild.ps1
+/tests/New-PublicDocumentationPatch.ps1
+/tests/Get-DocumentationTargets.ps1

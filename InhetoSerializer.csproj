@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageId>Inheto</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>alt160</Authors>
+    <Copyright>Copyright (c) 2026 alt160</Copyright>
+    <Description>A .NET-native, low-allocation binary serializer with shared and circular reference preservation, broad built-in type coverage, selective property-path reads, and compatible-type hydration.</Description>
+    <PackageTags>binary;serialization;serializer;object-graph;low-allocation;property-path;cloning;dotnet</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/alt160/Inheto</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alt160/Inheto</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DebugType>portable</DebugType>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="fasterflect" Version="3.0.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All" />
+    <None Update="README.md" Pack="true" PackagePath="/" />
+    <None Update="LICENSE;CHANGELOG.md" Pack="true" PackagePath="/" />
+    <None Update="docs\types-and-round-tripping.md;docs\property-paths.md;docs\performance-and-memory.md;docs\comparisons.md;docs\configuration-and-reconstruction.md"
+          Pack="true" PackagePath="/" />
+    <!-- Preserve drafting history locally without shipping superseded guidance. -->
+    <None Update="docs\README_WORKING_NOTES.md" Pack="false" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Payload transformations belong to callers; retain legacy source locally, never in runtime/package output. -->
+    <Compile Remove="AESEncryptionHelper.cs;BrotliExtensions.cs" />
+    <EmbeddedResource Remove="AESEncryptionHelper.cs;BrotliExtensions.cs" />
+    <Content Remove="AESEncryptionHelper.cs;BrotliExtensions.cs" />
+    <None Include="AESEncryptionHelper.cs;BrotliExtensions.cs"
+          Pack="false" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BufferStream" Version="1.0.2" />
+    <!-- Validation sources and generated review/history artifacts never belong in the runtime assembly. -->
+    <Compile Remove="bin\**;obj\**;tests\**;scripts\**;artifacts\**;.code-history\**;.vshistory\**" />
+    <EmbeddedResource Remove="bin\**;obj\**;tests\**;scripts\**;artifacts\**;.code-history\**;.vshistory\**" />
+    <Content Remove="bin\**;obj\**;tests\**;scripts\**;artifacts\**;.code-history\**;.vshistory\**" />
+    <None Update="bin\**;obj\**;tests\**;scripts\**;artifacts\**;.code-history\**;.vshistory\**"
+          Pack="false" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <InhetoPackageId Condition="'$(InhetoPackageId)' == '' and '$(ReviewPackageVersion)' != ''">Inheto.ReleaseBoundaryCheck</InhetoPackageId>
+    <InhetoPackageId Condition="'$(InhetoPackageId)' == ''">Inheto</InhetoPackageId>
+    <InhetoPackageVersion Condition="'$(InhetoPackageVersion)' == '' and '$(ReviewPackageVersion)' != ''">$(ReviewPackageVersion)</InhetoPackageVersion>
+    <InhetoPackageVersion Condition="'$(InhetoPackageVersion)' == ''">1.0.0</InhetoPackageVersion>
+    <PackageFeed Condition="'$(PackageFeed)' == ''">$(MSBuildThisFileDirectory)..\artifacts\packages</PackageFeed>
+    <RestoreAdditionalProjectSources>$(PackageFeed);$(RestoreAdditionalProjectSources)</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+</Project>

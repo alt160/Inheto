@@ -1,0 +1,96 @@
+name: Validate package
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: false
+        type: string
+        default: '1.0.0'
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: 8.0.x
+      - name: Choose and validate the candidate version
+        id: version
+        shell: pwsh
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          [xml] $project = Get-Content InhetoSerializer.csproj -Raw
+          $declared = [string] $project.Project.PropertyGroup.Version
+          $version = if ($env:REQUESTED_VERSION) { $env:REQUESTED_VERSION } else { $declared }
+          if ($version -notmatch '^\d+\.\d+\.\d+$' -or $version -cne $declared) {
+            throw 'The candidate must use the stable version declared in the project.'
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Snapshot, build, and pack once
+        shell: pwsh
+        env:
+          CANDIDATE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          ./scripts/Backup-ChangedSources.ps1
+          dotnet build InhetoSerializer.csproj -c Release /p:TreatWarningsAsErrors=true
+          if ($LASTEXITCODE -ne 0) { throw 'Production build failed.' }
+          dotnet pack InhetoSerializer.csproj -c Release --no-build --no-restore -o artifacts/packages /p:PackageVersion=$env:CANDIDATE_VERSION /p:TreatWarningsAsErrors=true
+          if ($LASTEXITCODE -ne 0) { throw 'Production pack failed.' }
+          ./scripts/New-ReleaseAssets.ps1 -Version $env:CANDIDATE_VERSION
+          ./scripts/Test-ReleaseAssets.ps1 -Version $env:CANDIDATE_VERSION
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: inheto-candidate
+          path: artifacts/packages/*
+          if-no-files-found: error
+          retention-days: 14
+
+  consumers:
+    needs: candidate
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [net8.0, net9.0, net10.0]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: inheto-candidate
+          path: artifacts/packages
+      - name: Verify the identical release files and run all public-package suites
+        shell: pwsh
+        env:
+          CANDIDATE_VERSION: ${{ needs.candidate.outputs.version }}
+          CONSUMER_FRAMEWORK: ${{ matrix.framework }}
+        run: |
+          ./scripts/Test-ReleaseAssets.ps1 -Version $env:CANDIDATE_VERSION
+          ./scripts/Test-PackageConsumers.ps1 -Version $env:CANDIDATE_VERSION -Framework $env:CONSUMER_FRAMEWORK
+      - name: Retain consumer build and test logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: consumer-logs-${{ matrix.framework }}
+          path: artifacts/consumer-validation/**/*.log
+          if-no-files-found: warn
+          retention-days: 14
