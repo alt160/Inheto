@@ -249,6 +249,6 @@ See [configuration and reconstruction](docs/configuration-and-reconstruction.md)
 
 The library targets .NET 8; independent package consumers also exercise .NET 9 and .NET 10. Later compatible runtimes can use the .NET 8 asset, with future runtime compatibility verified as those releases become available.
 
-Runtime dependencies: BufferStream 1.0.2 and fasterflect 3.0.0. Compression/encryption helpers, test harnesses and review artifacts do not ship in the runtime assembly/package.
+Runtime dependencies: BufferStream 1.0.2 and fasterflect 3.0.0.
 
 Apache-2.0.
