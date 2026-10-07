@@ -11,7 +11,7 @@
 
 ## Local validation (PowerShell 7)
 
-Run from the repository root, with Git and an installed .NET SDK. These commands build and inspect local artifacts only; they do not push or publish:
+Run from the repository root, with Git and the .NET 10 SDK used by CI (the resulting library still targets .NET 8). These commands build and inspect local artifacts only; they do not push or publish:
 
 ```powershell
 ./scripts/Backup-ChangedSources.ps1
