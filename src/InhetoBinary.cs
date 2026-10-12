@@ -737,6 +737,11 @@ namespace Inheto
                 if (entry.Kind == InhetoKindMasks.InhetoBaseType &&
                     entry.Type.BaseType is InhetoBaseTypes.CustomProp or InhetoBaseTypes.CustomType)
                 {
+                    // Missing member readers are a hydration policy, not evidence of a removed link.
+                    // Skip before copying opaque bytes or assigning over an initialized destination.
+                    if (entry.Type.BaseType == InhetoBaseTypes.CustomProp &&
+                        dzOptions.UnhandledCustomProperties == UnhandledCustomPropertyHandling.Ignore)
+                        continue;
                     if (acc is not null && !acc.ReadOnly)
                         acc.SetValue(ref obj, ReadCustomFallback(entry, propType, requestedPropPath));
                     continue;
@@ -1057,7 +1062,8 @@ namespace Inheto
                                 if (acc.ReadOnly) continue;
 
                                 object? comparer = null;
-                                comparer = GetComparerIfAny(propPath, dzOptions, tType, entry);
+                                // Comparer registrations belong to the requested collection, not its owning object.
+                                comparer = GetComparerIfAny(propPath, dzOptions, propType, entry);
 
                                 if (dzOptions.TryGetActivator(propType, out var act))
                                 {

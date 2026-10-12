@@ -330,7 +330,7 @@ if (verify)
     {
         var guideBlocks = Regex.Matches(File.ReadAllText(args[1]), @"```csharp\r?\n(.*?)```", RegexOptions.Singleline);
         var compiled = Regex.Match(File.ReadAllText(args[2]), @"// RECONSTRUCTION-SAMPLE-1\r?\n(.*?)// END-RECONSTRUCTION-SAMPLE", RegexOptions.Singleline);
-        Require(guideBlocks.Count == 3 && compiled.Success && Normalize(compiled.Groups[1].Value) == Normalize(guideBlocks[2].Groups[1].Value),
+        Require(guideBlocks.Count == 4 && compiled.Success && Normalize(compiled.Groups[1].Value) == Normalize(guideBlocks[3].Groups[1].Value),
             "optional reconstruction guide example matches independently compiled source");
         VerifyGuideExample(singletonBytes);
     }

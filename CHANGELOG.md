@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 - 2026-10-12
+
+- Add `DeserializationOptions.UnhandledCustomProperties` with `Ignore` and `AsBinary` policies for member-specific custom payloads without an applicable reader.
+- The default now retains initialized property/field values instead of attempting an incompatible binary assignment. Select `AsBinary` for the previous raw-payload conversion behavior. Explicit raw reads and registered readers remain unchanged.
+- Preserve the policy when options are forked for selected hydration; registered-reader null results and exceptions retain their normal behavior.
+- Correct collection comparer lookup to use the requested collection type rather than its owning object's type.
+- No wire-format change. Continue using the public BufferStream 1.0.2 package and validating package-only consumers on .NET 8, 9 and 10.
+
 ## 1.0.1
 
 - Explain the name Inheto: **IN**dexed **HE**ader **T**o **O**ffsets.

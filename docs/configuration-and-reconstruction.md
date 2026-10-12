@@ -22,6 +22,25 @@ var configured = InhetoBinary.FromObject(order, writeOptions, readOptions);
 
 Custom member serializers can supply text or bytes; exact-type serializers supply bytes. Pair them with corresponding deserialization registrations when reconstructing application values. Text member hooks use UTF-8. Finish configuring options before use; registrations are mutable and must not be edited concurrently with serialization or reads. `DeserializationOptions` also supports activation rules and comparer-aware reconstruction.
 
+### Custom members without a reader
+
+When automatically hydrating properties or fields, `DeserializationOptions.UnhandledCustomProperties` defaults to `UnhandledCustomPropertyHandling.Ignore`. A stored member-specific custom payload (`CustomProp`) without an applicable reader is left unassigned: the destination keeps its constructor-initialized or existing value. The payload is not copied just to discard it. This also applies to members inside a selected subtree.
+
+Choose `AsBinary` to use the existing conversion of the exact custom payload bytes instead:
+
+```csharp
+var readOptions = new DeserializationOptions
+{
+    UnhandledCustomProperties = UnhandledCustomPropertyHandling.AsBinary
+};
+```
+
+Byte-array and `object` destinations receive the payload bytes; `MemoryStream` destinations receive a read-only wrapper. An incompatible destination, such as the original custom application class with no reader, throws `InvalidCastException` rather than being silently skipped.
+
+Registered readers always take precedence, including a reader returning null; reader exceptions propagate in either mode. Ordinary `byte[]` members, type-wide custom codecs (`CustomType`), and collection-element handling are unchanged. An explicit `ReadPropAs<byte[]>(path)` can still retrieve raw custom bytes in `Ignore` mode: the policy skips automatic member assignment, not intentional direct access.
+
+The stored header identifies a custom member representation, not its registration history or which application produced it. The same rule therefore applies when a reader was never registered or was later removed.
+
 `FailOnUnsupportedType` defaults to `false`. When enabled, it rejects specified unsupported ordinary representations, including native addresses/handles, delegates, selected unboxable members, and stateful structs opaque under the chosen member policy. Exclusions and registered custom serializers take precedence. A strict failure is a `NotSupportedException` identifying the type and path, also available through `exception.Data["Inheto.Type"]` and `exception.Data["Inheto.Path"]`.
 
 Serialization and reconstruction use the getters, enumerators, constructors, setters and custom hooks belonging to your application types. Choose these members with the same care as when calling them directly.

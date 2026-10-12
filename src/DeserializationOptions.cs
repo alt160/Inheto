@@ -629,6 +629,7 @@ namespace Inheto
             {
                 MemberTypes = MemberTypes,
                 AllowStoredTypeActivation = AllowStoredTypeActivation,
+                UnhandledCustomProperties = UnhandledCustomProperties,
                 ExcludedMembers = excludedMembers
             };
             foreach (var entry in MemberDeserializers)
@@ -715,6 +716,28 @@ namespace Inheto
                 return requestedType;
             throw new NotSupportedException($"Automatic stored-type construction is disabled at '{propPath}'. Request a concrete destination or approve the stored type with AllowStoredType<T>().");
         }
+
+        private UnhandledCustomPropertyHandling unhandledCustomProperties;
+
+        /// <summary>
+        /// Gets or sets automatic property/field handling for a stored CustomProp payload with no applicable member reader; defaults to Ignore.<br/>
+        /// Ignore skips assignment and preserves the destination's existing or constructor-initialized value without copying the custom payload.<br/>
+        /// AsBinary uses the existing core byte-value conversion: byte-array/object members receive the exact payload, and unsupported destinations throw InvalidCastException.<br/>
+        /// Registered readers always take precedence, including a reader returning null or throwing; their failures are not suppressed.<br/>
+        /// This setting does not affect ordinary byte arrays, CustomType codecs, collection-element handling, or explicit direct raw-value reads.<br/>
+        /// Configure options before use; changing them concurrently with materialization is unsupported.<br/>
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The assigned policy is not a declared value.<br/></exception>
+        public UnhandledCustomPropertyHandling UnhandledCustomProperties
+        {
+            get => unhandledCustomProperties;
+            set
+            {
+                if (value is not UnhandledCustomPropertyHandling.Ignore and not UnhandledCustomPropertyHandling.AsBinary)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown custom-property handling policy.");
+                unhandledCustomProperties = value;
+            }
+        }
     }
 
     /// <summary>
@@ -739,5 +762,18 @@ namespace Inheto
             ArgumentNullException.ThrowIfNull(deserializer);
             options.MemberDeserializers[propPath] = payload => deserializer(System.Text.Encoding.UTF8.GetString((byte[])payload));
         }
+    }
+
+    /// <summary>
+    /// Chooses automatic property/field hydration when a stored CustomProp value has no applicable member reader.<br/>
+    /// CustomProp marks a member-specific representation, including Abraxas write-link payloads, but records neither the reader nor its registration origin.<br/>
+    /// Registered readers and explicit direct raw-value reads retain their normal behavior; CustomType is a separate representation.<br/>
+    /// </summary>
+    public enum UnhandledCustomPropertyHandling
+    {
+        /// <summary>Skips assignment without decoding/copying the custom payload, retaining the destination's existing or constructor-initialized value.<br/></summary>
+        Ignore = 0,
+        /// <summary>Uses core conversion of the exact payload bytes; incompatible automatic member destinations retain InvalidCastException rather than being silently skipped.<br/></summary>
+        AsBinary = 1
     }
 }

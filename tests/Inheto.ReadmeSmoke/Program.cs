@@ -7,16 +7,16 @@ string programPath = args[1];
 string readmeText = File.ReadAllText(readmePath);
 var readmeBlocks = Regex.Matches(readmeText, @"```csharp\r?\n(.*?)```", RegexOptions.Singleline);
 var compiledBlocks = Regex.Matches(File.ReadAllText(programPath), @"// README-SAMPLE-(\d+)\r?\n(.*?)// END-README-SAMPLE", RegexOptions.Singleline);
-Require(readmeBlocks.Count == 3 && compiledBlocks.Count == 8, "Expected three README examples and eight compiled README/guide examples.");
+Require(readmeBlocks.Count == 3 && compiledBlocks.Count == 9, "Expected three README examples and nine compiled README/guide examples.");
 string guideDirectory = Path.Combine(Path.GetDirectoryName(readmePath)!, "docs");
 var performanceBlocks = Regex.Matches(File.ReadAllText(Path.Combine(guideDirectory, "performance-and-memory.md")), @"```csharp\r?\n(.*?)```", RegexOptions.Singleline);
 var configurationBlocks = Regex.Matches(File.ReadAllText(Path.Combine(guideDirectory, "configuration-and-reconstruction.md")), @"```csharp\r?\n(.*?)```", RegexOptions.Singleline);
 var pathBlocks = Regex.Matches(File.ReadAllText(Path.Combine(guideDirectory, "property-paths.md")), @"```csharp\r?\n(.*?)```", RegexOptions.Singleline);
-Require(performanceBlocks.Count == 2 && configurationBlocks.Count == 3 && pathBlocks.Count == 1, "Guide sample counts changed; update explicit compilation coverage.");
+Require(performanceBlocks.Count == 2 && configurationBlocks.Count == 4 && pathBlocks.Count == 1, "Guide sample counts changed; update explicit compilation coverage.");
 string[] publishedSamples = [readmeBlocks[1].Groups[1].Value, readmeBlocks[0].Groups[1].Value,
     performanceBlocks[0].Groups[1].Value, performanceBlocks[1].Groups[1].Value,
-    configurationBlocks[0].Groups[1].Value, configurationBlocks[1].Groups[1].Value, pathBlocks[0].Groups[1].Value,
-    readmeBlocks[2].Groups[1].Value];
+    configurationBlocks[0].Groups[1].Value, configurationBlocks[2].Groups[1].Value, pathBlocks[0].Groups[1].Value,
+    readmeBlocks[2].Groups[1].Value, configurationBlocks[1].Groups[1].Value];
 foreach (Match sample in compiledBlocks)
 {
     int index = int.Parse(sample.Groups[1].Value) - 1;
@@ -328,7 +328,20 @@ Require(notesReader.ReadNameValueCollection(".Many")?.GetValues("tags") is { Len
     "NameValueCollection multi-value entry.");
 Require(notesReader.ReadStringCollection(".Strings") is { Count: 3 } restoredStrings && restoredStrings[0] == "first" && restoredStrings[1] is null && restoredStrings[2] == "last",
     "StringCollection ordering and explicit null slot.");
-Console.WriteLine($"PASS three README blocks and five guide blocks match compiled source; complex literal/alias/circular paths with whole-graph topology, numeric enum reprojection, direct/collection/whole reads, independent cloning, unrelated-type hydration, 100 writer/reader reuse cycles, ownership, aliases, strict policy, diagnostic, CLR continuation and focused round-trip notes. Runtime: {Environment.Version}");
+VerifyCustomPolicySample();
+Console.WriteLine($"PASS three README blocks and six guide blocks match compiled source; complex literal/alias/circular paths with whole-graph topology, numeric enum reprojection, direct/collection/whole reads, independent cloning, unrelated-type hydration, 100 writer/reader reuse cycles, ownership, aliases, strict policy, diagnostic, CLR continuation and focused round-trip notes. Runtime: {Environment.Version}");
+
+/// <summary>Compiles the exact custom-member policy guide example and verifies its declared setting.<br/></summary>
+static void VerifyCustomPolicySample()
+{
+// README-SAMPLE-9
+var readOptions = new DeserializationOptions
+{
+    UnhandledCustomProperties = UnhandledCustomPropertyHandling.AsBinary
+};
+// END-README-SAMPLE
+    Require(readOptions.UnhandledCustomProperties == UnhandledCustomPropertyHandling.AsBinary, "Custom member policy guide example.");
+}
 
 /// <summary>Normalizes sample formatting and removes namespace imports relocated to the compilation unit's start.<br/></summary>
 /// <param name="text">One README or compiled fixture sample, never executed as script.<br/></param>

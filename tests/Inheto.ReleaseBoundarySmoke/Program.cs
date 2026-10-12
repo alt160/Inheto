@@ -5,6 +5,8 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 
 var assembly = typeof(InhetoSerializer).Assembly;
+if (assembly.GetType("CustomMemberPolicyRegression") is not null)
+    throw new InvalidOperationException("The custom-member validation fixture leaked into the runtime assembly.");
 string[] forbiddenNames = { "Program", "ReviewCases", "EnumerableCases", "ConversionCases", "PerformanceHolder", "SmokeRecord", "ReleaseBoundaryThrowingGetter", "DocumentationOptionsFixture", "ProductionIlAudit", "HelperRegression", "UnsupportedPolicyRegression", "LiteralPathReview", "PathRecord", "PathNode", "CallbackRoot", "CallbackNode", "AesEncryptionHelper", "BrotliExtensions" };
 if (assembly.GetTypes().Any(type => forbiddenNames.Contains(type.Name, StringComparer.Ordinal)))
     throw new InvalidOperationException("A validation-harness type leaked into the packaged runtime assembly.");
@@ -47,6 +49,7 @@ if (args.Length == 3 && args[0] == "--verify-symbols") PackageMetadataRegression
 /// </summary>
 void VerifySerializationBoundary()
 {
+    CustomMemberPolicyRegression.Verify();
     var policy = new SerializationOptions();
     policy.ExcludedMembers.Add(".Hidden");
     var fixture = new DocumentationOptionsFixture { Visible = 1, Hidden = 2 };

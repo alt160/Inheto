@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- This isolated consumer deliberately has no ProjectReference. -->
-    <Compile Include="Program.cs;HelperRegression.cs;UnsupportedPolicyRegression.cs;PackageMetadataRegression.cs" />
+    <Compile Include="Program.cs;HelperRegression.cs;UnsupportedPolicyRegression.cs;PackageMetadataRegression.cs;CustomMemberPolicyRegression.cs" />
     <PackageReference Include="$(InhetoPackageId)" Version="$(InhetoPackageVersion)" />
   </ItemGroup>
 </Project>
