@@ -1,5 +1,7 @@
 # Inheto
 
+[![NuGet](https://img.shields.io/nuget/v/Inheto.svg)](https://www.nuget.org/packages/Inheto)
+
 Inheto (**IN**dexed **HE**ader **T**o **O**ffsets) is a .NET-native binary serializer for the objects your application already uses. The intent is simple: persist your data without first redesigning your objects around a serializer. No serialization attributes, declared contracts, generated models, or application-assigned object identities are needed for supported shapes.
 
 It handles both classes and structs, including sealed classes, nested collections, supported collection subclasses, and shared or circular references. The normal starting point is your existing objects—not a second set of serialization-only types. More than 50 built-in .NET types combine with supported arrays and collections into more than 25,000 tested shapes without custom handlers.
@@ -8,9 +10,17 @@ The binary is an addressable abstract syntax tree (AST). It records an object's 
 
 Inheto is not BinaryFormatter and does not use its implementation or payload format. It uses BufferStream rather than BinaryReader/BinaryWriter. Ordinary member matching follows names and paths, not the source class's assembly version or declaration order. Adding members does not require regenerating a serialization contract; renamed paths can be mapped with aliases. Changes to incompatible value types still need an application migration policy.
 
-## Quick start
+## Install
 
-Install the NuGet package with `dotnet add package Inheto`. The package provides a .NET 8 library asset usable by .NET 8, 9, and 10 applications. Its dependencies are restored automatically by NuGet.
+Install the [Inheto NuGet package](https://www.nuget.org/packages/Inheto):
+
+```shell
+dotnet add package Inheto
+```
+
+The package provides a .NET 8 library asset usable by applications targeting .NET 8 and compatible later .NET versions, including .NET 9 and 10. NuGet restores its dependencies automatically.
+
+## Quick start
 
 Consider existing application types that look like this. They have no serialization-specific declarations, and being sealed does not change that:
 
